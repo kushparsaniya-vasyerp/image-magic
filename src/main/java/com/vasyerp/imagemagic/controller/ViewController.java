@@ -13,9 +13,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
+
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 
 @Controller
@@ -27,7 +27,7 @@ public class ViewController {
         this.imageService = imageService;
     }
 
-    @GetMapping
+    @GetMapping("/")
     public ModelAndView index() {
         return new ModelAndView("home");
     }
