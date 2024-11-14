@@ -28,7 +28,7 @@ public class ImageService {
         operation.format(outputFormat);
         operation.addImage(outputPath);
 
-        ImageMagickCmd cmd = new ImageMagickCmd(imageMagickPath);
+        ImageMagickCmd cmd = new ImageMagickCmd("magick");
         try {
             cmd.run(operation);
         } catch (IM4JavaException e) {
