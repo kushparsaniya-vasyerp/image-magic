@@ -15,6 +15,9 @@ public class ImageService {
     @Value("${image-magic.imagemagick.path}")
     private String imageMagickPath;
 
+    @Value("${image-magic.imagemagick.command}")
+    private String imageMagickCommand;
+
     public File convertAndResizeImage(File inputFile, String outputPath, int height, int width, int percentage, String outputFormat) throws IOException, InterruptedException {
         IMOperation operation = new IMOperation();
 
@@ -28,7 +31,7 @@ public class ImageService {
         operation.format(outputFormat);
         operation.addImage(outputPath);
 
-        ImageMagickCmd cmd = new ImageMagickCmd("magick");
+        ImageMagickCmd cmd = new ImageMagickCmd(imageMagickCommand);
         try {
             cmd.run(operation);
         } catch (IM4JavaException e) {
