@@ -6,7 +6,9 @@ import org.im4java.core.ImageMagickCmd;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StopWatch;
 
 import java.io.File;
 import java.io.IOException;
@@ -49,7 +51,10 @@ public class ImageService {
         return outputFile;
     }
 
+    @Async
     public void convertAndResizeImagesInFolder(File inputFolder, String outputFolderPath, int height, int width, int percentage, String outputFormat) throws IOException, InterruptedException {
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
         log.info("Converting and resizing images in folder: {}", inputFolder.getAbsolutePath());
         if (!inputFolder.isDirectory()) {
             throw new IllegalArgumentException("Input path must be a directory");
@@ -85,6 +90,7 @@ public class ImageService {
             convertAndResizeImage(inputFile, outputFilePath, height, width, percentage, outputFormat);
         }
         log.info("Finished converting and resizing images for size: {}x{}", width, height);
+        log.info("Total time taken for size: {}x{}: {} minutes", width, height, stopWatch.getTotalTimeSeconds());
     }
 
 }
