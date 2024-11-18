@@ -3,6 +3,8 @@ package com.vasyerp.imagemagic.service;
 import org.im4java.core.IM4JavaException;
 import org.im4java.core.IMOperation;
 import org.im4java.core.ImageMagickCmd;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -12,6 +14,7 @@ import java.io.IOException;
 @Service
 public class ImageService {
 
+    private static final Logger log = LoggerFactory.getLogger(ImageService.class);
     @Value("${image-magic.imagemagick.path}")
     private String imageMagickPath;
 
@@ -43,8 +46,47 @@ public class ImageService {
         if (!outputFile.exists()) {
             throw new IOException("Output file was not created");
         }
-
         return outputFile;
     }
 
+    public void convertAndResizeImagesInFolder(File inputFolder, String outputFolderPath, int height, int width, int percentage, String outputFormat) throws IOException, InterruptedException {
+        log.info("Converting and resizing images in folder: {}", inputFolder.getAbsolutePath());
+        if (!inputFolder.isDirectory()) {
+            throw new IllegalArgumentException("Input path must be a directory");
+        }
+
+        File outputFolder = new File(outputFolderPath);
+        if (!outputFolder.exists()) {
+            outputFolder.mkdirs();
+        }
+
+        File[] files = inputFolder.listFiles((dir, name) -> {
+            String lowerName = name.toLowerCase();
+            return lowerName.endsWith(".jpg") || lowerName.endsWith(".jpeg") || lowerName.endsWith(".png") || lowerName.endsWith(".webp");
+        });
+
+
+        if (files == null) {
+            log.warn("No images found in folder");
+            return;
+        }
+        log.info("Found {} images in folder", files.length);
+        log.info("Start converting and resizing images for size: {}x{}", width, height);
+        for (File inputFile : files) {
+            String outputFilePath = "";
+            try {
+                outputFilePath = outputFolderPath + File.separator + inputFile.getName().replaceFirst("[.][^.]+$", "") + "-" + width + "x" + height + "." + outputFormat;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            if (outputFilePath.isBlank()) {
+                throw new IllegalArgumentException("Output file path is invalid");
+            }
+            convertAndResizeImage(inputFile, outputFilePath, height, width, percentage, outputFormat);
+        }
+        log.info("Finished converting and resizing images for size: {}x{}", width, height);
+    }
+
 }
+
+

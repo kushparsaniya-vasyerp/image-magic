@@ -42,6 +42,8 @@
                         </div>
                         <button type="submit" class="btn btn-primary btn-block">Upload and Download</button>
                     </form>
+                    <hr>
+                    <a href="/bulk-process" class="btn btn-secondary btn-block">Bulk Process Images</a>
                 </div>
             </div>
         </div>
