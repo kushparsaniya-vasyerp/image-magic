@@ -26,9 +26,11 @@ public class ImageService {
     @Value("${image-magic.imagemagick.command}")
     private String imageMagickCommand;
 
+    ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
-    public synchronized File convertAndResizeImage(File inputFile, String outputPath, int height, int width, int percentage, String outputFormat) throws IOException, InterruptedException {
-//        log.info("image: {}, thread: {}", inputFile.getAbsolutePath(), Thread.currentThread().getName());
+
+    public File convertAndResizeImage(File inputFile, String outputPath, int height, int width, int percentage, String outputFormat) throws IOException, InterruptedException {
+        log.info("image: {}, thread: {}", inputFile.getAbsolutePath(), Thread.currentThread().getName());
         IMOperation operation = new IMOperation();
 
         operation.addImage(inputFile.getAbsolutePath());
@@ -60,7 +62,6 @@ public class ImageService {
     public void convertAndResizeImagesInFolder(File inputFolder, String outputFolderPath, int height, int width, int percentage, String outputFormat) throws IOException, InterruptedException {
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
-        ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
         log.info("Converting and resizing images in folder: {}", inputFolder.getAbsolutePath());
         if (!inputFolder.isDirectory()) {
             throw new IllegalArgumentException("Input path must be a directory");
@@ -75,7 +76,6 @@ public class ImageService {
             String lowerName = name.toLowerCase();
             return lowerName.endsWith(".jpg") || lowerName.endsWith(".jpeg") || lowerName.endsWith(".png") || lowerName.endsWith(".webp");
         });
-
 
         if (files == null) {
             log.warn("No images found in folder");
@@ -99,7 +99,6 @@ public class ImageService {
         }
 
         latch.await();
-        executorService.shutdown();
         stopWatch.stop();
         log.info("TIme Take for size: {}x{} is: {} minutes", height, width, stopWatch.getTotalTimeSeconds() / 60);
     }
