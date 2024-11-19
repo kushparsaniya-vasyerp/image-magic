@@ -52,6 +52,8 @@ public class ViewController {
             @RequestParam("format") String format,
             Model model, HttpSession session) {
         try {
+            StopWatch stopWatch = new StopWatch();
+            stopWatch.start();
             File inputFolder = new File(inputFolderPath);
             for (String size : sizes) {
                 try {
@@ -64,11 +66,14 @@ public class ViewController {
                     return "bulk-process";
                 }
             }
+            stopWatch.stop();
+            log.info("Total time taken: {} minutes", stopWatch.getTotalTimeSeconds() /60);
             model.addAttribute("message", "Images processed successfully!");
         } catch (Exception e) {
             e.printStackTrace();
             model.addAttribute("message", "Error processing images: " + e.getMessage());
         }
+
 //        session.setAttribute("taken-time", String.format("%.2f minutes", stopWatch.getTotalTimeSeconds() / 60));
         return "redirect:/bulk-process";
     }

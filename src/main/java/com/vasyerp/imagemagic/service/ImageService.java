@@ -12,6 +12,9 @@ import org.springframework.util.StopWatch;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Service
 public class ImageService {
@@ -23,7 +26,9 @@ public class ImageService {
     @Value("${image-magic.imagemagick.command}")
     private String imageMagickCommand;
 
-    public File convertAndResizeImage(File inputFile, String outputPath, int height, int width, int percentage, String outputFormat) throws IOException, InterruptedException {
+
+    public synchronized File convertAndResizeImage(File inputFile, String outputPath, int height, int width, int percentage, String outputFormat) throws IOException, InterruptedException {
+//        log.info("image: {}, thread: {}", inputFile.getAbsolutePath(), Thread.currentThread().getName());
         IMOperation operation = new IMOperation();
 
         operation.addImage(inputFile.getAbsolutePath());
@@ -55,6 +60,7 @@ public class ImageService {
     public void convertAndResizeImagesInFolder(File inputFolder, String outputFolderPath, int height, int width, int percentage, String outputFormat) throws IOException, InterruptedException {
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
+        ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
         log.info("Converting and resizing images in folder: {}", inputFolder.getAbsolutePath());
         if (!inputFolder.isDirectory()) {
             throw new IllegalArgumentException("Input path must be a directory");
@@ -76,21 +82,26 @@ public class ImageService {
             return;
         }
         log.info("Found {} images in folder", files.length);
-        log.info("Start converting and resizing images for size: {}x{}", width, height);
+
+        CountDownLatch latch = new CountDownLatch(files.length);
+
         for (File inputFile : files) {
-            String outputFilePath = "";
-            try {
-                outputFilePath = outputFolderPath + File.separator + inputFile.getName().replaceFirst("[.][^.]+$", "") + "-" + width + "x" + height + "." + outputFormat;
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            if (outputFilePath.isBlank()) {
-                throw new IllegalArgumentException("Output file path is invalid");
-            }
-            convertAndResizeImage(inputFile, outputFilePath, height, width, percentage, outputFormat);
+            executorService.submit(() -> {
+                try {
+                    String outputFilePath = outputFolderPath + File.separator + inputFile.getName().replaceFirst("[.][^.]+$", "") + "-" + width + "x" + height + "." + outputFormat;
+                    convertAndResizeImage(inputFile, outputFilePath, height, width, percentage, outputFormat);
+                } catch (IOException | InterruptedException e) {
+                    log.error("Error processing image: {}", inputFile.getName(), e);
+                } finally {
+                    latch.countDown();
+                }
+            });
         }
-        log.info("Finished converting and resizing images for size: {}x{}", width, height);
-        log.info("Total time taken for size: {}x{}: {} minutes", width, height, stopWatch.getTotalTimeSeconds());
+
+        latch.await();
+        executorService.shutdown();
+        stopWatch.stop();
+        log.info("TIme Take for size: {}x{} is: {} minutes", height, width, stopWatch.getTotalTimeSeconds() / 60);
     }
 
 }
