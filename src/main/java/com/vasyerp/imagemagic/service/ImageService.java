@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
 
 @Service
 public class ImageService {
@@ -27,6 +28,7 @@ public class ImageService {
     private String imageMagickCommand;
 
     ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+//    ExecutorService executorService = new ForkJoinPool(Runtime.getRuntime().availableProcessors());
 
 
     public File convertAndResizeImage(File inputFile, String outputPath, int height, int width, int percentage, String outputFormat) throws IOException, InterruptedException {
@@ -58,7 +60,7 @@ public class ImageService {
         return outputFile;
     }
 
-    @Async
+//    @Async
     public void convertAndResizeImagesInFolder(File inputFolder, String outputFolderPath, int height, int width, int percentage, String outputFormat) throws IOException, InterruptedException {
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
